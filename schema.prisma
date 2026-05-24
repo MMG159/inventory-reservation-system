@@ -1,0 +1,67 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+enum ReservationStatus {
+  PENDING
+  CONFIRMED
+  RELEASED
+}
+
+model Product {
+  id          String        @id @default(uuid()) @db.Uuid
+  name        String
+  description String?
+  price       Decimal       @db.Decimal(10, 2)
+  stocks      Stock[]
+  reservations Reservation[]
+
+  @@index([name])
+}
+
+model Warehouse {
+  id           String        @id @default(uuid()) @db.Uuid
+  name         String
+  location     String
+  stocks       Stock[]
+  reservations Reservation[]
+
+  @@index([location])
+}
+
+model Stock {
+  id            String    @id @default(uuid()) @db.Uuid
+  productId     String    @db.Uuid
+  warehouseId   String    @db.Uuid
+  totalUnits    Int
+  reservedUnits Int
+  product       Product   @relation(fields: [productId], references: [id], onDelete: Cascade)
+  warehouse     Warehouse @relation(fields: [warehouseId], references: [id], onDelete: Cascade)
+
+  @@unique([productId, warehouseId])
+  @@index([warehouseId, productId])
+  @@index([productId])
+  @@index([warehouseId])
+}
+
+model Reservation {
+  id          String            @id @default(uuid()) @db.Uuid
+  productId   String            @db.Uuid
+  warehouseId String            @db.Uuid
+  quantity    Int
+  status      ReservationStatus @default(PENDING)
+  expiresAt   DateTime
+  product     Product           @relation(fields: [productId], references: [id], onDelete: Cascade)
+  warehouse   Warehouse         @relation(fields: [warehouseId], references: [id], onDelete: Cascade)
+
+  @@index([productId, warehouseId])
+  @@index([status, expiresAt])
+  @@index([warehouseId, status])
+}
+
