@@ -7,6 +7,7 @@ This project implements an inventory reservation flow with:
 - **Upstash Redis** for:
   - distributed locking (race-condition safety)
   - idempotency-key replay protection
+- **Local in-memory fallback** for lock/idempotency in development when Upstash envs are not configured
 - **Cron-based expiry release** for stale reservations
 
 ## What Is Implemented
@@ -70,6 +71,11 @@ Fill the values in `.env.local`:
 - `UPSTASH_REDIS_REST_URL`
 - `UPSTASH_REDIS_REST_TOKEN`
 - `CRON_SECRET` (recommended for securing Vercel Cron calls)
+
+Note for local development:
+
+- If Upstash Redis env vars are missing or placeholders, the app falls back to an in-memory lock/idempotency store.
+- This fallback is intended only for local testing and single-instance development.
 
 Template:
 
@@ -147,6 +153,11 @@ How it works:
    - delete only if current lock value matches this caller’s token
    - prevents one caller from deleting another caller’s lock
 
+Local fallback behavior:
+
+- If Redis is not configured, `withDistributedLock` uses an in-memory lock map with TTL and retry semantics.
+- This preserves correctness for local single-instance testing but is not distributed across instances.
+
 Why this is correct:
 
 - Competing requests for the same stock bucket are serialized.
@@ -176,6 +187,11 @@ Effect:
 
 - Client retries (network blips, browser retries, function retries) do not duplicate stock mutations or reservation transitions.
 - For successful prior operations, API returns the same semantic result.
+
+Local fallback behavior:
+
+- If Redis is not configured, idempotency records are stored in an in-memory map with processing/completed states and TTL.
+- This supports local testing but does not provide cross-instance guarantees.
 
 ---
 
