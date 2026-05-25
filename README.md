@@ -127,6 +127,33 @@ npm run dev
 
 Open `http://localhost:3000`.
 
+## 7. Deploy (Vercel + Supabase + Upstash)
+
+1. Push this repository to GitHub.
+2. Import the repo into Vercel (`Add New` -> `Project`).
+3. In Vercel Project Settings -> `Environment Variables`, add:
+   - `DATABASE_URL`
+   - `DIRECT_URL`
+   - `UPSTASH_REDIS_REST_URL`
+   - `UPSTASH_REDIS_REST_TOKEN`
+   - `CRON_SECRET`
+4. Deploy.
+5. Seed the hosted database so the live demo has data:
+   - Option A (recommended): from your machine, point env vars to production DB and run `npm run db:seed`.
+   - Option B: insert equivalent seed rows directly via Supabase SQL editor.
+6. Verify cron config is active from `vercel.json`:
+   - [vercel.json](C:/Users/m123m.MMG/Downloads/Assignment/vercel.json)
+   - It calls `/api/cron/release-expired` every 5 minutes.
+
+Pre-debrief live checks:
+
+1. `GET /api/products` returns seeded products.
+2. Reserving decreases available units.
+3. Confirm updates reservation status and decrements stock correctly.
+4. Release updates reservation status and restores reserved units.
+5. Expired confirm returns `410`.
+6. Cron releases expired pending reservations.
+
 ---
 
 ## Reservation Concurrency Correctness (Distributed Lock)
