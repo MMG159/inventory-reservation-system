@@ -301,12 +301,20 @@ export default function CheckoutReservationPage() {
             </div>
 
             {isPending && isExpired && (
-              <p
-                className="mt-3 rounded-md border border-red-200 bg-red-50 p-2 text-sm text-red-700"
-                role="alert"
-              >
-                This reservation has expired. Please create a new one.
-              </p>
+              <div className="mt-3 space-y-2">
+                <p
+                  className="rounded-md border border-red-200 bg-red-50 p-2 text-sm text-red-700"
+                  role="alert"
+                >
+                  This reservation has expired. Please create a new one.
+                </p>
+                <p className="text-xs text-slate-600">
+                  To verify error handling, you can still click{" "}
+                  <span className="font-semibold">Confirm purchase</span>; the API
+                  will return <span className="font-semibold">410</span> and show a
+                  visible error message.
+                </p>
+              </div>
             )}
           </section>
         )}

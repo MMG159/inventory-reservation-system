@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 
 type StockByWarehouse = {
@@ -28,6 +29,11 @@ type ReserveResult = {
   expiresAt: string;
 };
 
+type ReservationHint = {
+  id: string;
+  expiresAt: string;
+};
+
 function formatPrice(price: string | number) {
   const numeric = typeof price === "string" ? Number(price) : price;
   if (Number.isNaN(numeric)) return String(price);
@@ -52,6 +58,9 @@ export default function HomePage() {
   const [reserveMessage, setReserveMessage] = useState<Record<string, string>>(
     {},
   );
+  const [reservationHint, setReservationHint] = useState<
+    Record<string, ReservationHint>
+  >({});
 
   async function loadProducts() {
     try {
@@ -135,12 +144,24 @@ export default function HomePage() {
           reservation.expiresAt,
         ).toLocaleTimeString("en-US")}.`,
       }));
+      setReservationHint((prev) => ({
+        ...prev,
+        [key]: {
+          id: reservation.id,
+          expiresAt: reservation.expiresAt,
+        },
+      }));
 
       await loadProducts();
     } catch (err) {
       const message =
         err instanceof Error ? err.message : "Unexpected error reserving stock";
       setReserveMessage((prev) => ({ ...prev, [key]: message }));
+      setReservationHint((prev) => {
+        const next = { ...prev };
+        delete next[key];
+        return next;
+      });
     } finally {
       setReserveLoading((prev) => ({ ...prev, [key]: false }));
     }
@@ -209,6 +230,7 @@ export default function HomePage() {
                     const isReserving = reserveLoading[key] ?? false;
                     const availableOut = stock.availableUnits <= 0;
                     const successMessage = reserveMessage[key]?.startsWith("Reserved");
+                    const latestHint = reservationHint[key];
 
                     return (
                       <div
@@ -268,6 +290,23 @@ export default function HomePage() {
                           >
                             {reserveMessage[key]}
                           </p>
+                        )}
+
+                        {latestHint && successMessage && (
+                          <div className="mt-2 flex items-center justify-between gap-3">
+                            <Link
+                              href={`/checkout/${latestHint.id}`}
+                              className="text-xs font-semibold text-[#1f4a4d] underline underline-offset-4"
+                            >
+                              Go to checkout
+                            </Link>
+                            <span className="text-[10px] uppercase tracking-wide text-[#56626c]">
+                              Hold until{" "}
+                              {new Date(latestHint.expiresAt).toLocaleTimeString(
+                                "en-US",
+                              )}
+                            </span>
+                          </div>
                         )}
                       </div>
                     );
