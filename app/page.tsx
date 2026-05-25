@@ -34,6 +34,8 @@ type ReservationHint = {
   expiresAt: string;
 };
 
+const RESERVATION_HINTS_STORAGE_KEY = "inventory:lastReservationHints";
+
 function formatPrice(price: string | number) {
   const numeric = typeof price === "string" ? Number(price) : price;
   if (Number.isNaN(numeric)) return String(price);
@@ -86,6 +88,36 @@ export default function HomePage() {
   useEffect(() => {
     void loadProducts();
   }, []);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    try {
+      const raw = window.localStorage.getItem(RESERVATION_HINTS_STORAGE_KEY);
+      if (!raw) return;
+
+      const parsed = JSON.parse(raw) as Record<string, ReservationHint>;
+      const now = Date.now();
+      const activeHints = Object.fromEntries(
+        Object.entries(parsed).filter(([, hint]) => {
+          const expiresAtMs = new Date(hint.expiresAt).getTime();
+          return Number.isFinite(expiresAtMs) && expiresAtMs > now;
+        }),
+      ) as Record<string, ReservationHint>;
+
+      setReservationHint(activeHints);
+    } catch {
+      // Ignore malformed local storage data.
+    }
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    window.localStorage.setItem(
+      RESERVATION_HINTS_STORAGE_KEY,
+      JSON.stringify(reservationHint),
+    );
+  }, [reservationHint]);
 
   const hasProducts = useMemo(() => products.length > 0, [products]);
 
@@ -231,6 +263,9 @@ export default function HomePage() {
                     const availableOut = stock.availableUnits <= 0;
                     const successMessage = reserveMessage[key]?.startsWith("Reserved");
                     const latestHint = reservationHint[key];
+                    const latestHintIsActive =
+                      !!latestHint &&
+                      new Date(latestHint.expiresAt).getTime() > Date.now();
 
                     return (
                       <div
@@ -292,13 +327,13 @@ export default function HomePage() {
                           </p>
                         )}
 
-                        {latestHint && successMessage && (
+                        {latestHintIsActive && (
                           <div className="mt-2 flex items-center justify-between gap-3">
                             <Link
                               href={`/checkout/${latestHint.id}`}
                               className="text-xs font-semibold text-[#1f4a4d] underline underline-offset-4"
                             >
-                              Go to checkout
+                              {successMessage ? "Go to checkout" : "Resume checkout"}
                             </Link>
                             <span className="text-[10px] uppercase tracking-wide text-[#56626c]">
                               Hold until{" "}
