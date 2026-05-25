@@ -147,72 +147,83 @@ export default function HomePage() {
   }
 
   return (
-    <main className="min-h-screen bg-slate-50 p-6 md:p-10">
-      <div className="mx-auto max-w-6xl">
-        <h1 className="text-3xl font-bold text-slate-900">Inventory</h1>
-        <p className="mt-2 text-sm text-slate-600">
-          Reserve units by product and warehouse.
-        </p>
+    <main className="ui-shell min-h-screen p-5 md:p-10">
+      <div className="mx-auto max-w-7xl">
+        <header className="rise-in mb-8 rounded-3xl border border-[#d8d2c0] bg-[#f8f5ea]/90 p-6 md:p-8">
+          <p className="emph-pill mb-4 inline-flex rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-[0.12em]">
+            Inventory Console
+          </p>
+          <h1 className="text-4xl leading-tight text-[#1f2328] md:text-5xl">
+            Reserve Stock Across Warehouses
+          </h1>
+          <p className="mt-3 max-w-2xl text-sm text-[#45515a] md:text-base">
+            Live availability, conflict-safe reservations, and checkout-ready
+            holds with expiration tracking.
+          </p>
+        </header>
 
         {isLoading && (
-          <p className="mt-8 rounded-lg border border-slate-200 bg-white p-4 text-sm text-slate-600">
+          <p className="glass-card mt-8 rounded-2xl p-4 text-sm text-[#45515a]">
             Loading products...
           </p>
         )}
 
         {!isLoading && error && (
-          <p className="mt-8 rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+          <p className="mt-8 rounded-2xl border border-red-300 bg-red-100 p-4 text-sm text-[var(--danger)]">
             {error}
           </p>
         )}
 
         {!isLoading && !error && !hasProducts && (
-          <p className="mt-8 rounded-lg border border-slate-200 bg-white p-4 text-sm text-slate-600">
+          <p className="glass-card mt-8 rounded-2xl p-4 text-sm text-[#45515a]">
             No products found.
           </p>
         )}
 
         {!isLoading && !error && hasProducts && (
           <section className="mt-8 grid gap-6 md:grid-cols-2 xl:grid-cols-3">
-            {products.map((product) => (
+            {products.map((product, productIndex) => (
               <article
                 key={product.id}
-                className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm"
+                className="glass-card rise-in rounded-3xl p-5 md:p-6"
+                style={{ animationDelay: `${productIndex * 70}ms` }}
               >
                 <div className="flex items-start justify-between gap-4">
                   <div>
-                    <h2 className="text-lg font-semibold text-slate-900">
-                      {product.name}
-                    </h2>
-                    <p className="mt-1 text-sm text-slate-600">
+                    <h2 className="text-2xl text-[#1f2328]">{product.name}</h2>
+                    <p className="mt-1 text-sm font-medium uppercase tracking-wide text-[#4d6667]">
+                      Product
+                    </p>
+                    <p className="mt-2 text-sm text-[#45515a]">
                       {product.description ?? "No description provided."}
                     </p>
                   </div>
-                  <p className="whitespace-nowrap text-sm font-semibold text-slate-800">
+                  <p className="emph-pill whitespace-nowrap rounded-full px-3 py-1.5 text-sm font-semibold">
                     {formatPrice(product.price)}
                   </p>
                 </div>
 
-                <div className="mt-4 space-y-3">
+                <div className="mt-5 space-y-3">
                   {product.stockByWarehouse.map((stock) => {
                     const key = `${product.id}:${stock.warehouseId}`;
                     const isReserving = reserveLoading[key] ?? false;
                     const availableOut = stock.availableUnits <= 0;
+                    const successMessage = reserveMessage[key]?.startsWith("Reserved");
 
                     return (
                       <div
                         key={stock.warehouseId}
-                        className="rounded-lg border border-slate-200 bg-slate-50 p-3"
+                        className="rounded-2xl border border-[#d7d0bb] bg-[#f3efe1] p-4"
                       >
-                        <p className="text-sm font-medium text-slate-800">
+                        <p className="text-xl text-[#1f2328]">
                           {stock.warehouseName}
                         </p>
-                        <p className="text-xs text-slate-600">
+                        <p className="text-xs uppercase tracking-wider text-[#56626c]">
                           {stock.warehouseLocation}
                         </p>
-                        <p className="mt-2 text-sm text-slate-700">
-                          Available:{" "}
-                          <span className="font-semibold text-slate-900">
+                        <p className="mt-2 text-sm text-[#364047]">
+                          Available Units:{" "}
+                          <span className="font-bold text-[#1f2328]">
                             {stock.availableUnits}
                           </span>
                         </p>
@@ -229,7 +240,7 @@ export default function HomePage() {
                                 [key]: Number.isFinite(next) ? next : 1,
                               }));
                             }}
-                            className="w-20 rounded-md border border-slate-300 bg-white px-2 py-1 text-sm text-slate-900"
+                            className="w-20 rounded-xl border border-[#b9b3a3] bg-white px-3 py-2 text-sm text-[#1f2328] outline-none ring-0 transition focus:border-[#1f4a4d]"
                           />
                           <button
                             type="button"
@@ -241,14 +252,20 @@ export default function HomePage() {
                               )
                             }
                             disabled={isReserving || availableOut}
-                            className="rounded-md bg-slate-900 px-3 py-1.5 text-sm font-medium text-white disabled:cursor-not-allowed disabled:bg-slate-400"
+                            className="primary-btn rounded-xl px-4 py-2 text-sm font-semibold text-white transition disabled:cursor-not-allowed disabled:opacity-40"
                           >
                             {isReserving ? "Reserving..." : "Reserve"}
                           </button>
                         </div>
 
                         {reserveMessage[key] && (
-                          <p className="mt-2 text-xs text-slate-700">
+                          <p
+                            className={`mt-2 text-xs ${
+                              successMessage
+                                ? "text-emerald-800"
+                                : "text-[var(--danger)]"
+                            }`}
+                          >
                             {reserveMessage[key]}
                           </p>
                         )}
@@ -264,4 +281,3 @@ export default function HomePage() {
     </main>
   );
 }
-
