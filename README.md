@@ -10,6 +10,11 @@ This project implements an inventory reservation flow with:
 - **Local in-memory fallback** for lock/idempotency in development when Upstash envs are not configured
 - **Cron-based expiry release** for stale reservations
 
+## Live Demo
+
+- Production URL: `https://inventory-reservation-system-zeta.vercel.app/`
+- GitHub repository: `https://github.com/MMG159/inventory-reservation-system`
+
 ## What Is Implemented
 
 ### Data model
@@ -143,7 +148,7 @@ Open `http://localhost:3000`.
    - Option B: insert equivalent seed rows directly via Supabase SQL editor.
 6. Verify cron config is active from `vercel.json`:
    - [vercel.json](C:/Users/m123m.MMG/Downloads/Assignment/vercel.json)
-   - It calls `/api/cron/release-expired` every 5 minutes.
+   - On Vercel Hobby, cron is set to run once daily (`0 0 * * *`).
 
 Pre-debrief live checks:
 
@@ -253,7 +258,7 @@ In `vercel.json`:
   "crons": [
     {
       "path": "/api/cron/release-expired",
-      "schedule": "*/1 * * * *"
+      "schedule": "0 0 * * *"
     }
   ]
 }
